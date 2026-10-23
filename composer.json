@@ -1,0 +1,18 @@
+{
+    "name": "cidi-it/fatturapa_viewer",
+    "description": "Roundcube plugin to view and download electronic invoices (FatturaPA) and SdI notifications (.xml and .p7m)",
+    "type": "roundcube-plugin",
+    "keywords": ["fatturapa", "invoice", "sdi", "xml", "p7m", "roundcube", "e-invoice"],
+    "homepage": "https://github.com/CiDi-IT/fatturapa_viewer",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "CiDi-IT",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "roundcube/plugin-installer": ">=0.1.6"
+    }
+}
