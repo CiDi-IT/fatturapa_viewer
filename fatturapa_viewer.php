@@ -5,6 +5,9 @@ class fatturapa_viewer extends rcube_plugin
 
     function init()
     {
+        // Carica automaticamente i file di traduzione dalla cartella localization/
+        $this->add_texts('localization/', false);
+
         $this->add_hook('message_objects', array($this, 'add_invoice_button'));
         $this->register_action('plugin.view_fatturapa', array($this, 'render_invoice_page'));
         $this->register_action('plugin.download_fatturapa', array($this, 'download_invoice_file'));
@@ -62,19 +65,23 @@ class fatturapa_viewer extends rcube_plugin
                     $is_impossibilita = (strpos($filename_lc, 'ec_') !== false || strpos($filename_lc, 'impossibilita') !== false);
                     $is_receipt = (strpos($filename_lc, 'ricevuta') !== false || strpos($filename_lc, 'notifica') !== false || strpos($filename_lc, 'rc_') !== false);
 
+                    // Utilizzo di $this->gettext() per le etichette multilingua
                     if ($is_scarto) {
-                        $label = 'NOTIFICA DI SCARTO';
+                        $label = $this->gettext('scarto_title');
                         $bg_color = '#d9534f';
                     } elseif ($is_impossibilita) {
-                        $label = 'RECAPITO IMPOSSIBILE';
+                        $label = $this->gettext('impossibilita_title');
                         $bg_color = '#f0ad4e';
                     } elseif ($is_receipt) {
-                        $label = 'RICEVUTA DI CONSEGNA';
+                        $label = $this->gettext('receipt_title');
                         $bg_color = '#5cb85c';
                     } else {
-                        $label = 'FATTURA ELETTRONICA';
+                        $label = $this->gettext('invoice_title');
                         $bg_color = '#0275d8';
                     }
+
+                    $download_tooltip = $this->gettext('download_title');
+                    $fullscreen_tooltip = $this->gettext('fullscreen_title');
 
                     $html_preview = '<div class="fatturapa-embedded-container" style="margin-bottom: 25px; border: 1px solid #ccd0d4; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">';
                     
@@ -82,7 +89,7 @@ class fatturapa_viewer extends rcube_plugin
                     
                     // Sezione Sinistra: Download
                     $html_preview .= '<div style="display: flex; align-items: center;">';
-                    $html_preview .= '<a href="' . $url_download . '" title="Scarica file originale" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></a>';
+                    $html_preview .= '<a href="' . $url_download . '" title="' . htmlspecialchars($download_tooltip) . '" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></a>';
                     $html_preview .= '</div>';
 
                     // Sezione Centrale: Blocco unificato (Descrizione Tipo Documento prima, Nome File poi)
@@ -93,7 +100,7 @@ class fatturapa_viewer extends rcube_plugin
 
                     // Sezione Destra: Pulsante Schermo Intero ad icona
                     $html_preview .= '<div style="display: flex; align-items: center;">';
-                    $html_preview .= '<a href="' . $url_view . '" target="_blank" title="Schermo intero" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></a>';
+                    $html_preview .= '<a href="' . $url_view . '" target="_blank" title="' . htmlspecialchars($fullscreen_tooltip) . '" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></a>';
                     $html_preview .= '</div>';
                     
                     $html_preview .= '</div>';
@@ -156,7 +163,7 @@ class fatturapa_viewer extends rcube_plugin
 
             if (empty($file_content)) {
                 header('Content-Type: text/html; charset=utf-8');
-                echo "<h3>Errore Allegato</h3>Impossibile leggere il file dal server IMAP.";
+                echo "<h3>" . htmlspecialchars($this->gettext('error_attachment')) . "</h3>" . htmlspecialchars($this->gettext('error_imap_read'));
                 exit;
             }
 
@@ -172,7 +179,7 @@ class fatturapa_viewer extends rcube_plugin
 
         } catch (Exception $e) {
             header('Content-Type: text/html; charset=utf-8');
-            echo "<h3>Errore durante il download</h3>" . htmlspecialchars($e->getMessage());
+            echo "<h3>" . htmlspecialchars($this->gettext('error_download')) . "</h3>" . htmlspecialchars($e->getMessage());
             exit;
         }
     }
@@ -192,7 +199,7 @@ class fatturapa_viewer extends rcube_plugin
 
             if (empty($file_content)) {
                 header('Content-Type: text/html; charset=utf-8');
-                echo "<h3>Errore Allegato</h3>Impossibile leggere il file dal server IMAP.";
+                echo "<h3>" . htmlspecialchars($this->gettext('error_attachment')) . "</h3>" . htmlspecialchars($this->gettext('error_imap_read'));
                 exit;
             }
 
@@ -257,12 +264,12 @@ class fatturapa_viewer extends rcube_plugin
                 preg_match('/<Descrizione>(.*?)<\/Descrizione>/', $xml_content, $m5);
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #f5c6cb; border-left:6px solid #dc3545; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_clean('🛑 Notifica di Scarto SdI', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che la fattura trasmessa è stata scartata dal Sistema di Interscambio.', '#dc3545');
+                echo $render_header_clean('🛑 ' . $this->gettext('scarto_title'), $this->gettext('scarto_desc') . ' <b>' . htmlspecialchars($filename) . '</b>', '#dc3545');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
-                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
-                if (!empty($m2[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">File Scartato:</td><td style="padding:12px;">' . htmlspecialchars($m2[1]) . '</td></tr>';
-                if (!empty($m4[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc; color:#dc3545;">Codice Errore:</td><td style="padding:12px; font-weight:bold; color:#dc3545;">' . htmlspecialchars($m4[1]) . '</td></tr>';
-                if (!empty($m5[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Motivazione:</td><td style="padding:12px; color:#721c24; background:#fff5f5; font-weight:500;">' . htmlspecialchars($m5[1]) . '</td></tr>';
+                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">' . $this->gettext('sdi_id') . ':</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
+                if (!empty($m2[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">' . $this->gettext('discarded_file') . ':</td><td style="padding:12px;">' . htmlspecialchars($m2[1]) . '</td></tr>';
+                if (!empty($m4[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc; color:#dc3545;">' . $this->gettext('error_code') . ':</td><td style="padding:12px; font-weight:bold; color:#dc3545;">' . htmlspecialchars($m4[1]) . '</td></tr>';
+                if (!empty($m5[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">' . $this->gettext('motivation') . ':</td><td style="padding:12px; color:#721c24; background:#fff5f5; font-weight:500;">' . htmlspecialchars($m5[1]) . '</td></tr>';
                 echo '</table></div>';
                 exit;
             }
@@ -272,9 +279,9 @@ class fatturapa_viewer extends rcube_plugin
                 preg_match('/<IdentificativoSdI>(.*?)<\/IdentificativoSdI>/', $xml_content, $m1);
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #ffeeba; border-left:6px solid #f0ad4e; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_clean('⚠️ Attenzione: Recapito Impossibile', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che il SdI non è riuscito a recapitare la fattura.', '#856404');
+                echo $render_header_clean('⚠️ ' . $this->gettext('impossibilita_title'), $this->gettext('impossibilita_desc') . ' <b>' . htmlspecialchars($filename) . '</b>', '#856404');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
-                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
+                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">' . $this->gettext('sdi_id') . ':</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
                 echo '</table></div>';
                 exit;
             }
@@ -285,10 +292,10 @@ class fatturapa_viewer extends rcube_plugin
                 preg_match('/<DataOraConsegna>(.*?)<\/DataOraConsegna>/', $xml_content, $m_consegna);
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #ddd; border-left:6px solid #28a745; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_clean('✅ Ricevuta di Consegna SdI', 'Dettagli della ricevuta telematica per il file: <b>' . htmlspecialchars($filename) . '</b>', '#28a745');
+                echo $render_header_clean('✅ ' . $this->gettext('receipt_title'), $this->gettext('receipt_desc') . ' <b>' . htmlspecialchars($filename) . '</b>', '#28a745');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
-                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
-                if (!empty($m_consegna[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data Consegna:</td><td style="padding:12px;">' . htmlspecialchars(str_replace('T', ' ', $m_consegna[1])) . '</td></tr>';
+                if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">' . $this->gettext('sdi_id') . ':</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
+                if (!empty($m_consegna[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">' . $this->gettext('delivery_date') . ':</td><td style="padding:12px;">' . htmlspecialchars(str_replace('T', ' ', $m_consegna[1])) . '</td></tr>';
                 echo '</table></div>';
                 exit;
             }
@@ -297,7 +304,7 @@ class fatturapa_viewer extends rcube_plugin
             libxml_use_internal_errors(true);
             if (!@$xmlDoc->loadXML("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" . ltrim($xml_content))) {
                 header('Content-Type: text/html; charset=utf-8');
-                echo "<h3>Errore Struttura XML</h3>Il contenuto estratto non corrisponde a un XML valido.";
+                echo "<h3>" . htmlspecialchars($this->gettext('error_xml_structure')) . "</h3>" . htmlspecialchars($this->gettext('error_xml_invalid'));
                 exit;
             }
 
@@ -306,7 +313,7 @@ class fatturapa_viewer extends rcube_plugin
 
             if (!file_exists($xsl_path)) {
                 header('Content-Type: text/html; charset=utf-8');
-                echo "<h3>Errore File XSLT Mancante</h3>Il server non trova il file grafico: <b>" . htmlspecialchars($xslName) . "</b>";
+                echo "<h3>" . htmlspecialchars($this->gettext('error_xsl_missing')) . "</h3>";
                 exit;
             }
 
@@ -317,20 +324,19 @@ class fatturapa_viewer extends rcube_plugin
                     header('Content-Type: text/html; charset=utf-8');
                     header('Content-Disposition: inline;');
                     
-                    $transformed_html = $proc->transformToXML($xmlDoc);
-                    echo $transformed_html;
+                    echo $proc->transformToXML($xmlDoc);
                     exit;
                 }
             }
 
             header('Content-Type: text/html; charset=utf-8');
-            echo "<h3>Errore di Elaborazione</h3>Impossibile applicare lo stile XSLT.";
+            echo "<h3>" . htmlspecialchars($this->gettext('error_processing')) . "</h3>";
             exit;
 
         } catch (Exception $e) {
             header('Content-Type: text/html; charset=utf-8');
             echo '<div style="font-family:sans-serif; padding:20px; color:#721c24; background:#f8d7da; border:1px solid #f5c6cb; border-radius:5px; margin:20px;">';
-            echo '<h3>Errore imprevisto</h3><p>' . htmlspecialchars($e->getMessage()) . '</p></div>';
+            echo '<h3>' . htmlspecialchars($this->gettext('error_unexpected')) . '</h3><p>' . htmlspecialchars($e->getMessage()) . '</p></div>';
             exit;
         }
     }
