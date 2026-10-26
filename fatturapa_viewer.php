@@ -19,14 +19,12 @@ class fatturapa_viewer extends rcube_plugin
 
         if (!empty($message->attachments)) {
             foreach ($message->attachments as $attach) {
-                
                 $filename_lc = strtolower($attach->filename);
 
                 $is_xml = str_ends_with($filename_lc, '.xml');
                 $is_p7m = str_ends_with($filename_lc, '.p7m');
                 $is_not_daticert = strpos($filename_lc, 'daticert') === false;
                 $is_not_postacert = strpos($filename_lc, 'postacert') === false;
-                
                 $is_metadata = strpos($filename_lc, '_mt_') !== false;
 
                 $has_sdi_naming = (
@@ -40,7 +38,6 @@ class fatturapa_viewer extends rcube_plugin
                 );
 
                 if (($is_xml or $is_p7m) and $is_not_daticert and $is_not_postacert and !$is_metadata and $has_sdi_naming) {
-                    
                     $has_valid_invoice = true;
 
                     $url_view = $rcmail->url(array(
@@ -63,60 +60,82 @@ class fatturapa_viewer extends rcube_plugin
 
                     $is_scarto = (strpos($filename_lc, 'ns_') !== false || strpos($filename_lc, 'scarto') !== false);
                     $is_impossibilita = (strpos($filename_lc, 'ec_') !== false || strpos($filename_lc, 'impossibilita') !== false);
-                    $is_receipt = (strpos($filename_lc, 'ricevuta') !== false || 
-                                   strpos($filename_lc, 'notifica') !== false || 
-                                   strpos($filename_lc, 'rc_') !== false);
+                    $is_receipt = (strpos($filename_lc, 'ricevuta') !== false || strpos($filename_lc, 'notifica') !== false || strpos($filename_lc, 'rc_') !== false);
 
                     if ($is_scarto) {
                         $label = 'NOTIFICA DI SCARTO';
                         $bg_color = '#d9534f';
-                        $bg_hover = '#c9302c';
-                        $border_color = '#b52b27';
                     } elseif ($is_impossibilita) {
                         $label = 'RECAPITO IMPOSSIBILE';
                         $bg_color = '#f0ad4e';
-                        $bg_hover = '#ec971f';
-                        $border_color = '#eea236';
                     } elseif ($is_receipt) {
                         $label = 'RICEVUTA DI CONSEGNA';
                         $bg_color = '#5cb85c';
-                        $bg_hover = '#4cae4c';
-                        $border_color = '#398439';
                     } else {
                         $label = 'FATTURA ELETTRONICA';
                         $bg_color = '#0275d8';
-                        $bg_hover = '#025aa5';
-                        $border_color = '#01447e';
                     }
 
-                    $html_button = '<div style="margin: 12px 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; display: flex; gap: 6px; align-items: center;">';
+                    $html_preview = '<div class="fatturapa-embedded-container" style="margin-bottom: 25px; border: 1px solid #ccd0d4; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">';
                     
-                    // Pulsante di Visualizzazione
-                    $html_button .= '<a href="' . $url_view . '" target="_blank" rel="noopener" title="Visualizza documento" style="display: inline-flex; align-items: center; box-sizing: border-box; height: 38px; background-color: ' . $bg_color . '; color: white; padding: 0 16px; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 13px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border-bottom: 2px solid ' . $border_color . '; transition: background-color 0.2s; cursor: pointer;" onmouseover="this.style.backgroundColor=\'' . $bg_hover . '\'" onmouseout="this.style.backgroundColor=\'' . $bg_color . '\'">';
-                    $html_button .= '<span style="font-size: 15px; margin-right: 8px;">📄</span>';
-                    $html_button .= '<span>' . $label . ' <span style="font-weight: normal; opacity: 0.9; margin-left: 4px;">(' . htmlspecialchars($attach->filename) . ')</span></span>';
-                    $html_button .= '</a>';
+                    $html_preview .= '<div style="background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #ccd0d4; display: flex; justify-content: space-between; align-items: center; border-top-left-radius: 6px; border-top-right-radius: 6px;">';
+                    
+                    // Sezione Sinistra: Download
+                    $html_preview .= '<div style="display: flex; align-items: center;">';
+                    $html_preview .= '<a href="' . $url_download . '" title="Scarica file originale" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex-shrink: 0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></a>';
+                    $html_preview .= '</div>';
 
-                    // Pulsante di Download
-                    $html_button .= '<a href="' . $url_download . '" title="Scarica documento" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 38px; width: 38px; background-color: ' . $bg_color . '; color: white; text-decoration: none; border-radius: 4px; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border-bottom: 2px solid ' . $border_color . '; transition: background-color 0.2s; cursor: pointer;" onmouseover="this.style.backgroundColor=\'' . $bg_hover . '\'" onmouseout="this.style.backgroundColor=\'' . $bg_color . '\'">';
-                    $html_button .= '<span>⬇️</span>';
-                    $html_button .= '</a>';
+                    // Sezione Centrale: Blocco unificato (Descrizione Tipo Documento prima, Nome File poi)
+                    $html_preview .= '<div style="display: inline-flex; align-items: center; height: 28px; border: 1px solid #ccd0d4; border-radius: 4px; background: #fff; overflow: hidden; box-sizing: border-box;">';
+                    $html_preview .= '<span style="background: ' . $bg_color . '; color: #fff; padding: 0 12px; font-size: 11px; font-weight: bold; height: 100%; display: inline-flex; align-items: center;">' . $label . '</span>';
+                    $html_preview .= '<span style="padding: 0 12px; font-size: 13px; color: #333; height: 100%; display: inline-flex; align-items: center;">' . htmlspecialchars($attach->filename) . '</span>';
+                    $html_preview .= '</div>';
 
-                    $html_button .= '</div>';
+                    // Sezione Destra: Pulsante Schermo Intero ad icona
+                    $html_preview .= '<div style="display: flex; align-items: center;">';
+                    $html_preview .= '<a href="' . $url_view . '" target="_blank" title="Schermo intero" style="background: ' . $bg_color . '; color: #fff; width: 28px; height: 28px; text-decoration: none; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></a>';
+                    $html_preview .= '</div>';
+                    
+                    $html_preview .= '</div>';
 
-                    $args['content'][] = $html_button;
+                    $html_preview .= '<div style="padding: 0; background: #fff;">';
+                    $html_preview .= '<iframe src="' . $url_view . '" style="width: 100%; height: 600px; border: none; display: block;" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>';
+                    $html_preview .= '</div>';
+                    
+                    $html_preview .= '</div>';
+
+                    // Script JavaScript per nascondere il div .rcmBody e posizionare la nostra anteprima
+                    $rcmail->output->add_script('
+                        $(document).ready(function(){
+                            function hideRcmBodyAndInsert() {
+                                $(".rcmBody").hide();
+                                
+                                var $target = $(".rcmBody").first().parent();
+                                if ($target.length && !$target.find(".fatturapa-embedded-container").length) {
+                                    $target.prepend(\'' . addslashes($html_preview) . '\');
+                                }
+                            }
+
+                            hideRcmBodyAndInsert();
+                            setTimeout(hideRcmBodyAndInsert, 200);
+
+                            var observer = new MutationObserver(function(mutations) {
+                                hideRcmBodyAndInsert();
+                            });
+                            observer.observe(document.body, { childList: true, subtree: true });
+                        });
+                    ', 'docready');
+
+                    break;
                 }
             }
         }
 
-        // Se sono presenti documenti SdI, inietta lo stile e lo script tramite i meccanismi di Roundcube senza stamparli a video come testo
         if ($has_valid_invoice) {
-            $rcmail->output->add_header('<style>#attachmentslist, .attachmentslist { display: none !important; }</style>');
-            $rcmail->output->add_script('
-                $(document).ready(function(){
-                    $("#attachmentslist, .attachmentslist").remove();
-                });
-            ', 'docready');
+            $rcmail->output->add_header('<style>
+                .rcmBody { display: none !important; }
+                #attachmentslist, .attachmentslist, .message-attachments { display: none !important; }
+            </style>');
         }
 
         return $args;
@@ -168,15 +187,6 @@ class fatturapa_viewer extends rcube_plugin
             $filename = rcube_utils::get_input_value('_filename', rcube_utils::INPUT_GET);
             $mbox = rcube_utils::get_input_value('_mbox', rcube_utils::INPUT_GET);
             
-            $url_download = $rcmail->url(array(
-                '_task' => 'mail',
-                '_action' => 'plugin.download_fatturapa',
-                '_mbox' => $mbox,
-                '_uid' => $uid,
-                '_part' => $part,
-                '_filename' => $filename
-            ));
-            
             $rcmail->storage->set_folder($mbox);
             $file_content = $rcmail->storage->get_message_part($uid, $part);
 
@@ -215,7 +225,6 @@ class fatturapa_viewer extends rcube_plugin
                 $xml_content = $file_content;
             }
 
-            // Pulizia
             $xml_content = preg_replace('/^[\xEF\xBB\xBF\x1A\x20\r\n\t]+/', '', $xml_content);
             $xml_content = preg_replace('/<\?.*?\?>/ms', '', $xml_content);
 
@@ -232,121 +241,58 @@ class fatturapa_viewer extends rcube_plugin
             $is_impossibilita_file = (strpos($xml_content, 'RicevutaImpossibilitaRecapito') !== false || strpos($filename_lc, 'ec_') !== false || strpos($filename_lc, 'impossibilita') !== false);
             $is_consegna_file = (strpos($xml_content, 'RicevutaConsegna') !== false || strpos($filename_lc, 'ricevuta') !== false || strpos($filename_lc, 'rc_') !== false);
 
-            $render_header_with_download = function($title, $desc, $border_color, $bg_color, $bg_hover, $url_download) {
-                $html = '<div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid ' . $border_color . '; padding-bottom: 10px; margin-top:0;">';
-                $html .= '<div><h2 style="margin: 0; color: ' . $border_color . '; font-size: 24px;">' . $title . '</h2>';
-                $html .= '<p style="color:#555; font-size: 15px; margin-top: 8px; margin-bottom: 0;">' . $desc . '</p></div>';
-                $html .= '<a href="' . $url_download . '" title="Scarica documento" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 38px; width: 38px; background-color: ' . $bg_color . '; color: white; text-decoration: none; border-radius: 4px; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); border-bottom: 2px solid #333; flex-shrink: 0; margin-left: 15px;" onmouseover="this.style.backgroundColor=\'' . $bg_hover . '\'" onmouseout="this.style.backgroundColor=\'' . $bg_color . '\'"><span>⬇️</span></a>';
+            $render_header_clean = function($title, $desc, $border_color) {
+                $html = '<div style="border-bottom: 2px solid ' . $border_color . '; padding-bottom: 10px; margin-top:0;">';
+                $html .= '<h2 style="margin: 0; color: ' . $border_color . '; font-size: 24px;">' . $title . '</h2>';
+                $html .= '<p style="color:#555; font-size: 15px; margin-top: 8px; margin-bottom: 0;">' . $desc . '</p>';
                 $html .= '</div>';
                 return $html;
             };
 
-            // ==========================================
-            // 1. GESTIONE NOTIFICA DI SCARTO
-            // ==========================================
             if ($is_scarto_file) {
                 header('Content-Type: text/html; charset=utf-8');
-                
                 preg_match('/<IdentificativoSdI>(.*?)<\/IdentificativoSdI>/', $xml_content, $m1);
                 preg_match('/<NomeFile>(.*?)<\/NomeFile>/', $xml_content, $m2);
-                preg_match('/<Hash>(.*?)<\/Hash>/', $xml_content, $m_hash);
-                preg_match('/<DataOraRicezione>(.*?)<\/DataOraRicezione>/', $xml_content, $m3);
                 preg_match('/<Codice>(.*?)<\/Codice>/', $xml_content, $m4);
                 preg_match('/<Descrizione>(.*?)<\/Descrizione>/', $xml_content, $m5);
-                preg_match('/<Suggerimento>(.*?)<\/Suggerimento>/', $xml_content, $m6);
-                preg_match('/<MessageId>(.*?)<\/MessageId>/', $xml_content, $m_msg);
-                preg_match('/<PecMessageId>(.*?)<\/PecMessageId>/', $xml_content, $m_pec);
-
-                $data_ora = !empty($m3[1]) ? str_replace('T', ' ', $m3[1]) : '';
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #f5c6cb; border-left:6px solid #dc3545; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_with_download('⚠️ Notifica di Scarto SdI', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che la fattura trasmessa è stata scartata dal Sistema di Interscambio.', '#dc3545', '#d9534f', '#c9302c', $url_download);
-                
+                echo $render_header_clean('🛑 Notifica di Scarto SdI', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che la fattura trasmessa è stata scartata dal Sistema di Interscambio.', '#dc3545');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
                 if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
                 if (!empty($m2[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">File Scartato:</td><td style="padding:12px;">' . htmlspecialchars($m2[1]) . '</td></tr>';
-                if (!empty($m_hash[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Hash:</td><td style="padding:12px; word-break:break-all; font-family:monospace; font-size:12px;">' . htmlspecialchars($m_hash[1]) . '</td></tr>';
-                if (!empty($data_ora)) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data e Ora Ricezione:</td><td style="padding:12px;">' . htmlspecialchars($data_ora) . '</td></tr>';
                 if (!empty($m4[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc; color:#dc3545;">Codice Errore:</td><td style="padding:12px; font-weight:bold; color:#dc3545;">' . htmlspecialchars($m4[1]) . '</td></tr>';
                 if (!empty($m5[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Motivazione:</td><td style="padding:12px; color:#721c24; background:#fff5f5; font-weight:500;">' . htmlspecialchars($m5[1]) . '</td></tr>';
-                if (!empty($m6[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Suggerimento:</td><td style="padding:12px;">' . htmlspecialchars($m6[1]) . '</td></tr>';
-                if (!empty($m_msg[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Message ID:</td><td style="padding:12px;">' . htmlspecialchars($m_msg[1]) . '</td></tr>';
-                if (!empty($m_pec[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">PEC Message ID:</td><td style="padding:12px; word-break:break-all; font-size:12px;">' . htmlspecialchars($m_pec[1]) . '</td></tr>';
-                echo '</table>';
-                echo '</div>';
+                echo '</table></div>';
                 exit;
             }
 
-            // ==========================================
-            // 2. GESTIONE RECAPITO IMPOSSIBILE
-            // ==========================================
             if ($is_impossibilita_file) {
                 header('Content-Type: text/html; charset=utf-8');
-                
                 preg_match('/<IdentificativoSdI>(.*?)<\/IdentificativoSdI>/', $xml_content, $m1);
-                preg_match('/<NomeFile>(.*?)<\/NomeFile>/', $xml_content, $m2);
-                preg_match('/<Hash>(.*?)<\/Hash>/', $xml_content, $m_hash);
-                preg_match('/<DataOraRicezione>(.*?)<\/DataOraRicezione>/', $xml_content, $m3);
-                preg_match('/<MessageId>(.*?)<\/MessageId>/', $xml_content, $m_msg);
-                preg_match('/<PecMessageId>(.*?)<\/PecMessageId>/', $xml_content, $m_pec);
-
-                $data_ricezione = !empty($m3[1]) ? str_replace('T', ' ', $m3[1]) : '';
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #ffeeba; border-left:6px solid #f0ad4e; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_with_download('⚠️ Attenzione: Recapito Impossibile', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che il SdI <b>non è riuscito a recapitare la fattura</b> al destinatario (canale telematico o PEC non raggiungibili/errati). La fattura è comunque legalmente emessa, ma è necessario informare il cliente.', '#856404', '#f0ad4e', '#ec971f', $url_download);
-                
+                echo $render_header_clean('⚠️ Attenzione: Recapito Impossibile', 'Il file <b>' . htmlspecialchars($filename) . '</b> attesta che il SdI non è riuscito a recapitare la fattura.', '#856404');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
                 if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
-                if (!empty($m2[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Nome File:</td><td style="padding:12px;">' . htmlspecialchars($m2[1]) . '</td></tr>';
-                if (!empty($m_hash[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Hash:</td><td style="padding:12px; word-break:break-all; font-family:monospace; font-size:12px;">' . htmlspecialchars($m_hash[1]) . '</td></tr>';
-                if (!empty($data_ricezione)) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data e Ora Ricezione:</td><td style="padding:12px;">' . htmlspecialchars($data_ricezione) . '</td></tr>';
-                if (!empty($m_msg[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Message ID:</td><td style="padding:12px;">' . htmlspecialchars($m_msg[1]) . '</td></tr>';
-                if (!empty($m_pec[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">PEC Message ID:</td><td style="padding:12px; word-break:break-all; font-size:12px;">' . htmlspecialchars($m_pec[1]) . '</td></tr>';
-                echo '</table>';
-                echo '</div>';
+                echo '</table></div>';
                 exit;
             }
 
-            // ==========================================
-            // 3. GESTIONE RICEVUTA DI CONSEGNA
-            // ==========================================
             if ($is_consegna_file) {
                 header('Content-Type: text/html; charset=utf-8');
-                
                 preg_match('/<IdentificativoSdI>(.*?)<\/IdentificativoSdI>/', $xml_content, $m1);
-                preg_match('/<NomeFile>(.*?)<\/NomeFile>/', $xml_content, $m2);
-                preg_match('/<Hash>(.*?)<\/Hash>/', $xml_content, $m_hash);
-                preg_match('/<DataOraRicezione>(.*?)<\/DataOraRicezione>/', $xml_content, $m3);
                 preg_match('/<DataOraConsegna>(.*?)<\/DataOraConsegna>/', $xml_content, $m_consegna);
-                preg_match('/<Codice>(.*?)<\/Codice>/', $xml_content, $m_codice);
-                preg_match('/<Descrizione>(.*?)<\/Descrizione>/', $xml_content, $m_desc);
-                preg_match('/<MessageId>(.*?)<\/MessageId>/', $xml_content, $m_msg);
-                preg_match('/<PecMessageId>(.*?)<\/PecMessageId>/', $xml_content, $m_pec);
-
-                $data_ricezione = !empty($m3[1]) ? str_replace('T', ' ', $m3[1]) : '';
-                $data_consegna = !empty($m_consegna[1]) ? str_replace('T', ' ', $m_consegna[1]) : '';
 
                 echo '<div style="font-family:sans-serif; padding:30px; max-width:850px; margin:30px auto; background:#fff; border:1px solid #ddd; border-left:6px solid #28a745; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,0.08);">';
-                echo $render_header_with_download('✅ Ricevuta di Consegna SdI', 'Dettagli della ricevuta telematica per il file: <b>' . htmlspecialchars($filename) . '</b>', '#28a745', '#5cb85c', '#4cae4c', $url_download);
-                
+                echo $render_header_clean('✅ Ricevuta di Consegna SdI', 'Dettagli della ricevuta telematica per il file: <b>' . htmlspecialchars($filename) . '</b>', '#28a745');
                 echo '<table style="width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; color:#333;">';
                 if (!empty($m1[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; width:30%; background:#fcfcfc;">Identificativo SdI:</td><td style="padding:12px;">' . htmlspecialchars($m1[1]) . '</td></tr>';
-                if (!empty($m2[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Nome File:</td><td style="padding:12px;">' . htmlspecialchars($m2[1]) . '</td></tr>';
-                if (!empty($m_hash[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Hash:</td><td style="padding:12px; word-break:break-all; font-family:monospace; font-size:12px;">' . htmlspecialchars($m_hash[1]) . '</td></tr>';
-                if (!empty($data_ricezione)) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data e Ora Ricezione SdI:</td><td style="padding:12px;">' . htmlspecialchars($data_ricezione) . '</td></tr>';
-                if (!empty($data_consegna)) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data e Ora Consegna:</td><td style="padding:12px;">' . htmlspecialchars($data_consegna) . '</td></tr>';
-                if (!empty($m_codice[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Codice Canale:</td><td style="padding:12px;">' . htmlspecialchars($m_codice[1]) . '</td></tr>';
-                if (!empty($m_desc[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Descrizione Canale:</td><td style="padding:12px;">' . htmlspecialchars($m_desc[1]) . '</td></tr>';
-                if (!empty($m_msg[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Message ID:</td><td style="padding:12px;">' . htmlspecialchars($m_msg[1]) . '</td></tr>';
-                if (!empty($m_pec[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">PEC Message ID:</td><td style="padding:12px; word-break:break-all; font-size:12px;">' . htmlspecialchars($m_pec[1]) . '</td></tr>';
-                echo '</table>';
-                echo '</div>';
+                if (!empty($m_consegna[1])) echo '<tr style="border-bottom:1px solid #eee;"><td style="padding:12px; font-weight:bold; background:#fcfcfc;">Data Consegna:</td><td style="padding:12px;">' . htmlspecialchars(str_replace('T', ' ', $m_consegna[1])) . '</td></tr>';
+                echo '</table></div>';
                 exit;
             }
 
-            // ==========================================
-            // 4. GESTIONE FATTURA ELETTRONICA ORDINARIA
-            // ==========================================
             $xmlDoc = new DOMDocument();
             libxml_use_internal_errors(true);
             if (!@$xmlDoc->loadXML("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" . ltrim($xml_content))) {
@@ -360,7 +306,7 @@ class fatturapa_viewer extends rcube_plugin
 
             if (!file_exists($xsl_path)) {
                 header('Content-Type: text/html; charset=utf-8');
-                echo "<h3>Errore File XSLT Mancante</h3>Il server non trova il file grafico: <b>" . htmlspecialchars($xslName) . "</b> in <code>" . htmlspecialchars($xsl_path) . "</code>";
+                echo "<h3>Errore File XSLT Mancante</h3>Il server non trova il file grafico: <b>" . htmlspecialchars($xslName) . "</b>";
                 exit;
             }
 
@@ -370,20 +316,8 @@ class fatturapa_viewer extends rcube_plugin
                 if (@$proc->importStyleSheet($xsl_doc)) {
                     header('Content-Type: text/html; charset=utf-8');
                     header('Content-Disposition: inline;');
-                    header('Cache-Control: private, max-age=0, must-revalidate');
                     
                     $transformed_html = $proc->transformToXML($xmlDoc);
-
-                    $download_bar = '<div style="position: fixed; top: 15px; right: 20px; z-index: 999999; font-family: sans-serif;">';
-                    $download_bar .= '<a href="' . $url_download . '" title="Scarica documento" style="display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; height: 38px; width: 38px; background-color: #0275d8; color: white; text-decoration: none; border-radius: 4px; font-size: 15px; box-shadow: 0 3px 6px rgba(0,0,0,0.2); border-bottom: 2px solid #01447e;" onmouseover="this.style.backgroundColor=\'#025aa5\'" onmouseout="this.style.backgroundColor=\'#0275d8\'"><span>⬇️</span></a>';
-                    $download_bar .= '</div>';
-
-                    if (stripos($transformed_html, '</body>') !== false) {
-                        $transformed_html = str_ireplace('</body>', $download_bar . '</body>', $transformed_html);
-                    } else {
-                        $transformed_html = $download_bar . $transformed_html;
-                    }
-
                     echo $transformed_html;
                     exit;
                 }
@@ -396,9 +330,7 @@ class fatturapa_viewer extends rcube_plugin
         } catch (Exception $e) {
             header('Content-Type: text/html; charset=utf-8');
             echo '<div style="font-family:sans-serif; padding:20px; color:#721c24; background:#f8d7da; border:1px solid #f5c6cb; border-radius:5px; margin:20px;">';
-            echo '<h3>Errore imprevisto nel plugin FatturaPA</h3>';
-            echo '<p>' . htmlspecialchars($e->getMessage()) . '</p>';
-            echo '</div>';
+            echo '<h3>Errore imprevisto</h3><p>' . htmlspecialchars($e->getMessage()) . '</p></div>';
             exit;
         }
     }
@@ -414,16 +346,13 @@ class fatturapa_viewer extends rcube_plugin
         }
         
         file_put_contents($fileP7M, $string);
-
         $this->DerToSmime($fileP7M);
 
         $content = null;
         if (function_exists('openssl_cms_verify')) {
             @openssl_cms_verify($fileP7M, OPENSSL_CMS_NOVERIFY + OPENSSL_CMS_NOSIGS, $filePem);
-            
             if (file_exists($filePem)) {
                 @openssl_cms_verify($fileP7M, OPENSSL_CMS_NOVERIFY + OPENSSL_CMS_NOSIGS, $filePem, [], $filePem, $fileXml);
-                
                 if (file_exists($fileXml)) {
                     $content = file_get_contents($fileXml);
                     @unlink($fileXml);
@@ -437,13 +366,12 @@ class fatturapa_viewer extends rcube_plugin
     }
 
     private function DerToSmime($filePath) {
-        $to = "MIME-Version: 1.0\r\n" .
-              "Content-Disposition: attachment; filename=\"smime.p7m\"\r\n" .
-              "Content-Type: application/pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\"\r\n" .
-              "Content-Transfer-Encoding: base64\r\n\r\n";
-              
         $from = file_get_contents($filePath);
-        $to .= chunk_split(base64_encode($from));
-        return file_put_contents($filePath, $to);
+        $to_data = "MIME-Version: 1.0\r\n" .
+                   "Content-Disposition: attachment; filename=\"smime.p7m\"\r\n" .
+                   "Content-Type: application/pkcs7-mime; smime-type=signed-data; name=\"smime.p7m\"\r\n" .
+                   "Content-Transfer-Encoding: base64\r\n\r\n";
+        $to_data .= chunk_split(base64_encode($from));
+        return file_put_contents($filePath, $to_data);
     }
 }
