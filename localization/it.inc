@@ -1,0 +1,24 @@
+<?php
+$labels = array();
+$labels['invoice_title'] = 'FATTURA ELETTRONICA';
+$labels['receipt_title'] = 'RICEVUTA DI CONSEGNA';
+$labels['scarto_title'] = 'NOTIFICA DI SCARTO';
+$labels['impossibilita_title'] = 'RECAPITO IMPOSSIBILE';
+$labels['fullscreen_title'] = 'Schermo intero';
+$labels['download_title'] = 'Scarica file originale';
+$labels['scarto_desc'] = 'Il file attesta che la fattura trasmessa è stata scartata dal Sistema di Interscambio.';
+$labels['impossibilita_desc'] = 'Il file attesta che il SdI non è riuscito a recapitare la fattura.';
+$labels['receipt_desc'] = 'Dettagli della ricevuta telematica per il file:';
+$labels['sdi_id'] = 'Identificativo SdI';
+$labels['discarded_file'] = 'File Scartato';
+$labels['error_code'] = 'Codice Errore';
+$labels['motivation'] = 'Motivazione';
+$labels['delivery_date'] = 'Data Consegna';
+$labels['error_attachment'] = 'Errore Allegato';
+$labels['error_imap_read'] = 'Impossibile leggere il file dal server IMAP.';
+$labels['error_download'] = 'Errore durante il download';
+$labels['error_xml_structure'] = 'Errore Struttura XML';
+$labels['error_xml_invalid'] = 'Il contenuto estratto non corrisponde a un XML valido.';
+$labels['error_xsl_missing'] = 'Errore File XSLT Mancante';
+$labels['error_processing'] = 'Errore di Elaborazione';
+$labels['error_unexpected'] = 'Errore imprevisto';
